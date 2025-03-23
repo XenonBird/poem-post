@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>High-Resolution Poem Generator</title>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@500&family=Playfair+Display:wght@600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --primary-color: #2c3e50;
+        --secondary-color: #7f8c8d;
+        --accent-color: #4caf50;
+      }
+
+      body {
+        font-family: "Georgia", serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #f9f9f9;
+      }
+
+      .input-section {
+        background: white;
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        margin-bottom: 30px;
+      }
+
+      input,
+      textarea {
+        width: 100%;
+        padding: 12px 15px;
+        margin: 12px 0;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 16px;
+        transition: all 0.3s ease;
+      }
+
+      input:focus,
+      textarea:focus {
+        border-color: var(--accent-color);
+        box-shadow: 0 0 8px rgba(76, 175, 80, 0.2);
+        outline: none;
+      }
+
+      button {
+        background: var(--accent-color);
+        color: white;
+        border: none;
+        padding: 12px 25px;
+        border-radius: 8px;
+        cursor: pointer;
+        margin: 8px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+      }
+
+      button:hover {
+        background: #45a049;
+        transform: translateY(-2px);
+      }
+
+      .lang-btn {
+        background: #6c5ce7;
+      }
+
+      .lang-btn.active {
+        background: #4b3dad;
+      }
+
+      #previewContainer {
+        background: linear-gradient(135deg, #f8f5f1 0%, #f9fbfd 100%);
+        padding: 50px;
+        border-radius: 25px;
+        min-width: 500px;
+        min-height: 500px;
+        width: fit-content;
+        height: auto;
+        margin: 30px auto;
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        transform-origin: top left;
+      }
+
+      .preview-title {
+        font-size: 2.2em;
+        font-weight: bold;
+        text-align: center;
+        margin: 0 0 30px;
+        color: var(--primary-color);
+        font-family: "Playfair Display", serif;
+      }
+
+      .preview-content {
+        flex: 1;
+        font-size: 1.1em;
+        line-height: 1.8;
+        white-space: pre-wrap;
+        text-align: center;
+        color: var(--primary-color);
+        margin: 0 auto;
+        max-width: 600px;
+        min-height: 300px;
+        max-height: 1000px;
+        overflow: hidden;
+      }
+
+      .preview-author {
+        font-size: 0.9em;
+        color: var(--secondary-color);
+        font-style: italic;
+        text-align: center;
+        margin-top: 40px;
+        padding-top: 20px;
+      }
+
+      .bengali {
+        font-family: "Hind Siliguri", sans-serif;
+      }
+
+      .bengali .preview-title {
+        font-family: "Hind Siliguri", sans-serif;
+      }
+
+      .button-container {
+        text-align: center;
+        margin: 30px 0;
+      }
+
+      @media (max-width: 600px) {
+        #previewContainer {
+          min-width: 90%;
+          padding: 30px;
+        }
+
+        .preview-title {
+          font-size: 1.8em;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="button-container">
+      <button class="lang-btn active" onclick="setLanguage('en')">
+        English
+      </button>
+      <button class="lang-btn" onclick="setLanguage('bn')">বাংলা</button>
+    </div>
+
+    <div class="input-section">
+      <input type="text" id="title" placeholder="Enter poem title" />
+      <textarea
+        id="content"
+        rows="10"
+        placeholder="Enter poem content"
+      ></textarea>
+      <input type="text" id="author" placeholder="Enter author name" />
+      <div class="button-container">
+        <button onclick="generatePreview()">Generate Preview</button>
+      </div>
+    </div>
+
+    <div id="previewContainer">
+      <div class="preview-title" id="previewTitle"></div>
+      <div class="preview-content" id="previewContent"></div>
+      <div class="preview-author" id="previewAuthor"></div>
+    </div>
+
+    <div class="button-container">
+      <button onclick="downloadHighResImage()">Download HD Image</button>
+      <button onclick="shareImage()">Share Image</button>
+    </div>
+
+    <script>
+      let currentLanguage = "en";
+
+      function setLanguage(lang) {
+        currentLanguage = lang;
+        document.querySelectorAll(".lang-btn").forEach((btn) => {
+          btn.classList.toggle(
+            "active",
+            btn.textContent === (lang === "en" ? "English" : "বাংলা")
+          );
+        });
+        generatePreview();
+      }
+
+      function generatePreview() {
+        const title = document.getElementById("title").value;
+        const content = document.getElementById("content").value;
+        const author = document.getElementById("author").value;
+
+        const container = document.getElementById("previewContainer");
+        container.classList.toggle("bengali", currentLanguage === "bn");
+
+        document.getElementById("previewTitle").innerText = title;
+        document.getElementById("previewContent").innerText = content;
+        document.getElementById("previewAuthor").innerText = author;
+
+        adjustTextSize();
+      }
+
+      function adjustTextSize() {
+        const contentElement = document.getElementById("previewContent");
+        const container = document.getElementById("previewContainer");
+
+        contentElement.style.fontSize = "1.1em";
+        container.style.minHeight = "500px";
+
+        if (contentElement.scrollHeight > contentElement.clientHeight) {
+          let fontSize = 20;
+          contentElement.style.fontSize = fontSize + "px";
+
+          while (
+            contentElement.scrollHeight > contentElement.clientHeight &&
+            contentElement.clientHeight < 1000
+          ) {
+            container.style.minHeight =
+              parseInt(container.style.minHeight) + 50 + "px";
+          }
+
+          while (
+            contentElement.scrollHeight > contentElement.clientHeight &&
+            fontSize > 12
+          ) {
+            fontSize -= 1;
+            contentElement.style.fontSize = fontSize + "px";
+          }
+        }
+      }
+
+      function downloadHighResImage() {
+        const element = document.getElementById("previewContainer");
+        const originalWidth = element.offsetWidth;
+        const originalHeight = element.offsetHeight;
+
+        // Create clone for high-res rendering
+        const clone = element.cloneNode(true);
+        clone.style.position = "absolute";
+        clone.style.left = "-9999px";
+        document.body.appendChild(clone);
+
+        // Scale up for high resolution
+        const scale = 3; // 3x resolution
+        clone.style.width = originalWidth + "px";
+        clone.style.height = originalHeight + "px";
+        clone.style.transform = "scale(" + scale + ")";
+        clone.style.transformOrigin = "top left";
+
+        html2canvas(clone, {
+          scale: scale,
+          width: originalWidth * scale,
+          height: originalHeight * scale,
+          useCORS: true,
+          allowTaint: true,
+          lettering: true,
+          logging: true,
+          backgroundColor: null,
+          onclone: (clonedDoc) => {
+            clonedDoc.getElementById("previewContainer").style.transform =
+              "scale(" + scale + ")";
+          },
+        }).then((canvas) => {
+          const link = document.createElement("a");
+          link.download = "poem-hd.png";
+          link.href = canvas.toDataURL("image/png", 1.0);
+          link.click();
+          document.body.removeChild(clone);
+        });
+      }
+
+      async function shareImage() {
+        try {
+          const element = document.getElementById("previewContainer");
+          const canvas = await html2canvas(element, { scale: 2 });
+          const blob = await new Promise((resolve) =>
+            canvas.toBlob(resolve, "image/png", 1.0)
+          );
+          const file = new File([blob], "poem.png", { type: "image/png" });
+
+          if (navigator.share) {
+            await navigator.share({
+              title: "Check out this poem!",
+              files: [file],
+            });
+          } else {
+            alert("Web Share API not supported. Please download instead.");
+          }
+        } catch (error) {
+          console.error("Error sharing:", error);
+        }
+      }
+    </script>
+  </body>
+</html>
